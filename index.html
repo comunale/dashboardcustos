@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <!-- Só roda código deste próprio site; a única conexão externa é a API do GitHub (dados) e a fonte. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://api.github.com; img-src 'self' data: blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <title>Fatura da Família</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Bibliotecas copiadas dos pacotes oficiais do npm (chart.js 4.5.1, xlsx 0.18.5, pdfjs-dist 4.10.38) -->
+  <script src="vendor/chart.umd.min.js" defer></script>
+  <script src="vendor/xlsx.full.min.js" defer></script>
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">
+      <h1>Fatura da Família</h1>
+      <p id="subtitulo" class="sub"></p>
+    </div>
+    <div class="acoes">
+      <button id="btn-subir" class="botao" type="button">Subir fatura</button>
+      <button id="btn-publicar" class="botao primario" type="button" hidden>Publicar para a família</button>
+      <button id="btn-config" class="botao fantasma" type="button">Configurações</button>
+    </div>
+  </header>
+
+  <section id="filtros" class="filtros" hidden aria-label="Filtros">
+    <label class="campo">Fatura <select id="f-fatura"></select></label>
+    <div id="f-pessoa" class="chips" role="group" aria-label="Pessoa"></div>
+    <label class="campo">Cartão <select id="f-cartao"></select></label>
+  </section>
+
+  <nav id="abas" class="abas" hidden role="tablist" aria-label="Seções">
+    <button role="tab" data-aba="resumo" type="button">Resumo</button>
+    <button role="tab" data-aba="parceladas" type="button">Parceladas</button>
+    <button role="tab" data-aba="habitos" type="button">Hábitos</button>
+    <button role="tab" data-aba="altos" type="button">Valores altos</button>
+    <button role="tab" data-aba="marketplaces" type="button">Marketplaces</button>
+    <button role="tab" data-aba="compras" type="button">Todas as compras</button>
+  </nav>
+
+  <main id="conteudo" class="conteudo" tabindex="-1"></main>
+  <div id="aviso" class="aviso" role="status" aria-live="polite" hidden></div>
+
+  <dialog id="dlg-subir" class="dialogo">
+    <form method="dialog" id="form-subir">
+      <h2>Subir fatura</h2>
+      <p class="ajuda">Fatura do cartão Santander em PDF. O arquivo é lido aqui no navegador e não é enviado para lugar nenhum.</p>
+      <label class="campo-bloco">Arquivo PDF <input id="in-pdf" type="file" accept="application/pdf,.pdf" required></label>
+      <label class="campo-bloco">Senha do PDF <input id="in-senha-pdf" type="password" inputmode="numeric" autocomplete="off"></label>
+      <p id="erro-subir" class="erro" role="alert" hidden></p>
+      <div class="rodape-dialogo">
+        <button value="cancelar" class="botao fantasma" formnovalidate type="submit">Cancelar</button>
+        <button id="btn-ler" class="botao primario" type="button">Ler fatura</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-senha" class="dialogo">
+    <form method="dialog" id="form-senha">
+      <h2 id="senha-titulo">Senha da família</h2>
+      <p id="senha-ajuda" class="ajuda"></p>
+      <label class="campo-bloco">Senha da família <input id="in-senha-familia" type="password" autocomplete="current-password"></label>
+      <label class="campo-bloco" id="bloco-confirmar" hidden>Repita a senha <input id="in-senha-confirmar" type="password" autocomplete="new-password"></label>
+      <label class="marcar"><input id="in-lembrar" type="checkbox"> Lembrar neste aparelho</label>
+      <p id="erro-senha" class="erro" role="alert" hidden></p>
+      <div class="rodape-dialogo">
+        <button value="cancelar" class="botao fantasma" formnovalidate type="submit">Cancelar</button>
+        <button id="btn-senha-ok" class="botao primario" type="button">Continuar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-config" class="dialogo">
+    <form method="dialog" id="form-config">
+      <h2>Configurações</h2>
+      <p class="ajuda">Só quem publica precisa do token. Ele fica guardado apenas neste navegador.</p>
+      <label class="campo-bloco">Token do GitHub <input id="in-token" type="password" autocomplete="off" placeholder="github_pat_…"></label>
+      <div class="lado-a-lado">
+        <label class="campo-bloco">Dono <input id="in-dono" type="text" autocomplete="off"></label>
+        <label class="campo-bloco">Repositório <input id="in-repo" type="text" autocomplete="off"></label>
+      </div>
+      <button id="btn-esquecer" class="botao fantasma perigo" type="button">Esquecer senha e token deste aparelho</button>
+      <div class="rodape-dialogo">
+        <button value="cancelar" class="botao fantasma" formnovalidate type="submit">Cancelar</button>
+        <button id="btn-config-ok" class="botao primario" type="button">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>

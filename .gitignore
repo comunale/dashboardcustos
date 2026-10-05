@@ -1,0 +1,8 @@
+node_modules/
+faturas/
+*.pdf
+*.PDF
+.env*
+# spec e plano citam nomes e valores reais: ficam só neste computador
+docs/superpowers/
+.superpowers/
