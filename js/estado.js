@@ -2,7 +2,10 @@
 import { mesLongo } from './format.js';
 
 export function criarEstado() {
-  return { faturas: new Map(), alteradas: new Set(), faturaId: null, pessoa: 'todos', cartao: 'todos', aba: 'resumo', limiteAlto: 300, alterado: false, senhaFamilia: null };
+  return {
+    faturas: new Map(), alteradas: new Set(), faturaId: null, pessoa: 'todos', cartao: 'todos', aba: 'resumo', limiteAlto: 300, alterado: false, senhaFamilia: null,
+    parc: { situacao: 'todas', faixa: 'todas', busca: '', ordem: 'aPagar' }, // filtros da aba Parceladas
+  };
 }
 
 export const faturasOrdenadas = estado => [...estado.faturas.values()].sort((a, b) => b.id.localeCompare(a.id));

@@ -108,3 +108,45 @@ test('fatura real: parcelas futuras x valor informado pelo banco', async t => {
   t.diagnostic(`calculado ${calculado} x banco ${f.resumo.obrigacoesFuturas}`);
   assert.ok(Math.abs(calculado - f.resumo.obrigacoesFuturas) / f.resumo.obrigacoesFuturas < 0.05, 'diferença acima de 5%');
 });
+
+test('filtros das parceladas: situação, faixa de valor e busca', () => {
+  const f = fatura();
+  const ps = A.parceladas(f, f.lancamentos);
+  const nomes = l => l.map(p => p.descricao).sort();
+  assert.deepEqual(nomes(A.filtrarParceladas(ps, { situacao: 'acabando' })), ['CURSO ONLINE', 'LOJA DE MOVEIS', 'PIX FULANO DE TAL']);
+  assert.deepEqual(nomes(A.filtrarParceladas(ps, { situacao: 'recentes' })), ['PIX FULANO DE TAL']);
+  assert.deepEqual(A.filtrarParceladas(ps, { situacao: 'longas' }), []);
+  assert.deepEqual(nomes(A.filtrarParceladas(ps, { faixa: 'ate50' })), ['CURSO ONLINE']);
+  assert.deepEqual(nomes(A.filtrarParceladas(ps, { faixa: 'de50a200' })), ['LOJA DE MOVEIS', 'PIX FULANO DE TAL']);
+  assert.deepEqual(A.filtrarParceladas(ps, { faixa: 'acima200' }), []);
+  assert.deepEqual(nomes(A.filtrarParceladas(ps, { busca: 'pix' })), ['PIX FULANO DE TAL']);
+  assert.deepEqual(nomes(A.filtrarParceladas(ps, { situacao: 'acabando', faixa: 'de50a200', busca: 'loja' })), ['LOJA DE MOVEIS']);
+  assert.equal(A.filtrarParceladas(ps, {}).length, 3);
+});
+
+test('limites das faixas de valor da parcela', () => {
+  const p = v => ({ valor: v, restantes: 3, parcelaAtual: 3, descricao: 'X' });
+  assert.equal(A.filtrarParceladas([p(50)], { faixa: 'ate50' }).length, 1);
+  assert.equal(A.filtrarParceladas([p(50.01)], { faixa: 'de50a200' }).length, 1);
+  assert.equal(A.filtrarParceladas([p(200)], { faixa: 'de50a200' }).length, 1);
+  assert.equal(A.filtrarParceladas([p(200.01)], { faixa: 'acima200' }).length, 1);
+});
+
+test('ordenação das parceladas', () => {
+  const f = fatura();
+  const ps = A.parceladas(f, f.lancamentos);
+  const ordem = c => A.ordenarParceladas(ps, c).map(p => p.descricao);
+  assert.deepEqual(ordem('aPagar'), ['LOJA DE MOVEIS', 'PIX FULANO DE TAL', 'CURSO ONLINE']);
+  assert.deepEqual(ordem('valor'), ['LOJA DE MOVEIS', 'PIX FULANO DE TAL', 'CURSO ONLINE']);
+  assert.deepEqual(ordem('termina'), ['CURSO ONLINE', 'LOJA DE MOVEIS', 'PIX FULANO DE TAL']);
+  assert.deepEqual(ordem('recentes'), ['PIX FULANO DE TAL', 'LOJA DE MOVEIS', 'CURSO ONLINE']);
+  assert.deepEqual(ordem('loja'), ['CURSO ONLINE', 'LOJA DE MOVEIS', 'PIX FULANO DE TAL']);
+  assert.notEqual(A.ordenarParceladas(ps, 'loja'), ps, 'não altera a lista original');
+});
+
+test('resumo das parceladas filtradas', () => {
+  const f = fatura();
+  const ps = A.filtrarParceladas(A.parceladas(f, f.lancamentos), { situacao: 'acabando' });
+  assert.deepEqual(A.resumoParceladas(ps), { qtd: 3, porMes: 227.64, aPagar: 177.64, ultimoMes: '2026-10' });
+  assert.deepEqual(A.resumoParceladas([]), { qtd: 0, porMes: 0, aPagar: 0, ultimoMes: null });
+});

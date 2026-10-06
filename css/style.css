@@ -135,6 +135,11 @@ body.arrastando .soltar, body.arrastando .conteudo { outline: 3px dashed var(--m
 .erro { color: var(--critico); font-weight: 600; margin: 0; }
 .rodape-dialogo { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
 
+.filtros-parc { display: grid; gap: 12px; margin-bottom: 8px; }
+.filtro-grupo { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.filtro-rotulo { color: var(--tinta-2); font-weight: 600; font-size: .9rem; min-width: 7.5em; }
+.destaque { font-weight: 600; margin: 8px 0 12px; max-width: 70ch; }
+
 details.mais summary { cursor: pointer; color: var(--marca); font-weight: 600; margin-top: 8px; }
 details.bloco.mais summary { margin-top: 0; }
 details.bloco.mais[open] summary { margin-bottom: 12px; }

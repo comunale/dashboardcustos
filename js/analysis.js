@@ -32,6 +32,44 @@ export function parceladas(fatura, lancs) {
   }).sort((a, b) => b.saldoRestante - a.saldoRestante);
 }
 
+// Filtros da aba Parceladas. "Acabando" = faltam 2 ou menos; "Recentes" = 1ª ou 2ª parcela; "Longas" = faltam 6+.
+const SITUACOES = {
+  todas: () => true,
+  acabando: p => p.restantes <= 2,
+  recentes: p => p.parcelaAtual <= 2,
+  longas: p => p.restantes >= 6,
+};
+const FAIXAS = {
+  todas: () => true,
+  ate50: p => p.valor <= 50,
+  de50a200: p => p.valor > 50 && p.valor <= 200,
+  acima200: p => p.valor > 200,
+};
+
+export function filtrarParceladas(ps, { situacao = 'todas', faixa = 'todas', busca = '' } = {}) {
+  const termo = busca.trim().toUpperCase();
+  return ps.filter(p => SITUACOES[situacao](p) && FAIXAS[faixa](p) && (!termo || p.descricao.toUpperCase().includes(termo)));
+}
+
+const ORDENS = {
+  aPagar: (a, b) => b.saldoRestante - a.saldoRestante,
+  valor: (a, b) => b.valor - a.valor,
+  termina: (a, b) => a.restantes - b.restantes || b.valor - a.valor,
+  recentes: (a, b) => a.parcelaAtual - b.parcelaAtual || b.data.localeCompare(a.data),
+  loja: (a, b) => a.descricao.localeCompare(b.descricao, 'pt-BR'),
+};
+
+export const ordenarParceladas = (ps, criterio = 'aPagar') => [...ps].sort(ORDENS[criterio]);
+
+export function resumoParceladas(ps) {
+  return {
+    qtd: ps.length,
+    porMes: somar(ps),
+    aPagar: somar(ps, p => p.saldoRestante),
+    ultimoMes: ps.reduce((m, p) => (m == null || p.terminaEm > m ? p.terminaEm : m), null),
+  };
+}
+
 export function bolaDeNeve(fatura, lancs, meses = 12) {
   const ps = parceladas(fatura, lancs);
   return Array.from({ length: meses }, (_, i) => ({ mes: addMeses(fatura.id, i + 1), valor: somar(ps.filter(p => p.restantes >= i + 1)) }));
