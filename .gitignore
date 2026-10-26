@@ -6,3 +6,6 @@ faturas/
 # spec e plano citam nomes e valores reais: ficam só neste computador
 docs/superpowers/
 .superpowers/
+# estado local de ferramentas (Ruflo/Claude Flow)
+.claude-flow/
+.swarm/

@@ -11,32 +11,33 @@ export function render(main, { fatura, faturas, lancs, todos }) {
   // Com o filtro "Todos", o valor oficial é o do banco; com filtro, o calculado por compra.
   const comprometido = todos && res.obrigacoesFuturas != null ? res.obrigacoesFuturas : r.comprometidoFuturo;
 
-  // Manchete: quanto já está comprometido em parcelas
-  const canvasBola = h('canvas', { role: 'img', 'aria-label': 'Parcelas que caem em cada um dos próximos 12 meses' });
-  main.append(h('section', { class: 'bloco manchete' },
-    h('p', { class: 'frase' }, h('span', { class: 'numero' }, moeda(comprometido)), 'das próximas faturas já estão comprometidos com parcelas.'),
-    h('p', { class: 'apoio' }, r.proximaFatura > 0
-      ? `A fatura de ${mesLongo(bola[0].mes)} já começa com ${moeda(r.proximaFatura)} só de parcelas.`
-      : 'Nenhuma parcela cai nas próximas faturas neste filtro.'),
-    h('div', { class: 'grafico' }, canvasBola)));
-  graficoBarras(canvasBola, { rotulos: bola.map(b => mesCurto(b.mes)), series: [{ nome: 'Parcelas', valores: bola.map(b => b.valor), cor: c.s1 }], formatar: moeda, formatarEixo: moedaCurta });
-
-  // Alerta de juros (só faz sentido para a fatura inteira)
-  if (todos && r.jurosEncargos > 0) {
-    main.append(h('div', { class: 'alerta', role: 'note' }, h('span', { class: 'icone', 'aria-hidden': 'true' }, '!'),
-      h('p', {}, h('strong', {}, `Esta fatura cobrou ${moeda(r.jurosEncargos)} de juros e IOF. `),
-        `A fatura anterior (${moeda(res.saldoAnterior)}) não foi paga inteira: entraram ${moeda(res.pagamentos)}. O que sobra vai para o rotativo, com juros de mais de 15% ao mês.`)));
-  }
-
-  // Números da fatura
-  main.append(h('section', { class: 'bloco' }, h('div', { class: 'numeros' },
+  // 1º: o valor desta fatura (é o número que se procura primeiro)
+  main.append(h('section', { class: 'bloco' }, h('h2', {}, `Fatura de ${mesLongo(fatura.id)}`), h('div', { class: 'numeros' },
     todos
-      ? numero(moeda(fatura.total), `total a pagar, vence ${fatura.vencimento.split('-').reverse().join('/')}`)
-      : numero(moeda(r.compras), 'em compras neste filtro'),
+      ? numero(moeda(fatura.total), `total a pagar, vence ${fatura.vencimento.split('-').reverse().join('/')}`, true)
+      : numero(moeda(r.compras), 'em compras neste filtro', true),
     numero(String(r.qtdCompras), 'compras e parcelas nesta fatura'),
     numero(moeda(r.parceladoNestaFatura), 'só de parcelas nesta fatura'),
     todos && r.usoLimite != null ? numero(pct(r.usoLimite), `do limite usado (${moeda(fatura.limiteDisponivel)} livres)`) : null),
     todos ? h('p', { class: fatura.conferencia.ok ? 'conferido' : 'erro' }, fatura.conferencia.ok ? 'Totais conferidos com a fatura do banco.' : 'Os totais não bateram com o banco.') : null));
+
+  // Alerta de juros (só faz sentido para a fatura inteira). Só fala em rotativo quando houve juros de rotativo.
+  if (todos && r.jurosEncargos > 0) {
+    main.append(h('div', { class: 'alerta', role: 'note' }, h('span', { class: 'icone', 'aria-hidden': 'true' }, '!'),
+      h('p', {}, h('strong', {}, `Esta fatura cobrou ${moeda(r.jurosEncargos)} de juros e IOF. `),
+        res.jurosRotativo > 0
+          ? `A fatura anterior (${moeda(res.saldoAnterior)}) não foi paga inteira: entraram ${moeda(res.pagamentos)}. O que sobra vai para o rotativo, com juros de mais de 15% ao mês.`
+          : 'Confira na fatura do banco de onde vieram esses encargos.')));
+  }
+
+  // Parcelas futuras: deixa explícito que NÃO é o valor desta fatura
+  const canvasBola = h('canvas', { role: 'img', 'aria-label': 'Parcelas que caem em cada um dos próximos 12 meses' });
+  main.append(h('section', { class: 'bloco manchete' }, h('h2', {}, 'Parcelas futuras'),
+    h('p', { class: 'frase' }, h('span', { class: 'numero' }, moeda(comprometido)), 'ainda a pagar em parcelas nas próximas faturas.'),
+    h('p', { class: 'apoio' }, `Não é o valor desta fatura: é a soma das parcelas que ainda vão cair nos próximos meses. `
+      + (r.proximaFatura > 0 ? `A fatura de ${mesLongo(bola[0].mes)} já começa com ${moeda(r.proximaFatura)} só de parcelas.` : 'Neste filtro, nenhuma parcela cai nos próximos meses.')),
+    h('div', { class: 'grafico' }, canvasBola)));
+  graficoBarras(canvasBola, { rotulos: bola.map(b => mesCurto(b.mes)), series: [{ nome: 'Parcelas', valores: bola.map(b => b.valor), cor: c.s1 }], formatar: moeda, formatarEixo: moedaCurta });
 
   // Por pessoa/cartão e por categoria
   const cartoes = A.porCartao(fatura, lancs).map(x => ({ nome: `${x.pessoa} final ${x.final}${x.virtual ? ' (virtual)' : ''}`, valor: x.total }));
@@ -60,7 +61,7 @@ export function render(main, { fatura, faturas, lancs, todos }) {
   }
 }
 
-const numero = (valor, rotulo) => h('div', { class: 'numero-item' }, h('div', { class: 'valor' }, valor), h('div', { class: 'rotulo' }, rotulo));
+const numero = (valor, rotulo, principal = false) => h('div', { class: principal ? 'numero-item principal' : 'numero-item' }, h('div', { class: 'valor' }, valor), h('div', { class: 'rotulo' }, rotulo));
 
 // Junta o histórico impresso em todas as faturas carregadas, sem a fatura aberta (futura).
 function historico(faturas, ateId) {

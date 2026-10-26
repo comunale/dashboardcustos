@@ -9,13 +9,14 @@ import { mesLongo, mesCurto, moeda } from './format.js';
 import { h } from './ui/dom.js';
 import { destruirGraficos } from './ui/graficos.js';
 import * as resumo from './ui/resumo.js';
+import * as comparativo from './ui/comparativo.js';
 import * as parceladas from './ui/parceladas.js';
 import * as habitos from './ui/habitos.js';
 import * as altos from './ui/altos.js';
 import * as marketplaces from './ui/marketplaces.js';
 import * as compras from './ui/compras.js';
 
-const ABAS = { resumo, parceladas, habitos, altos, marketplaces, compras };
+const ABAS = { resumo, comparativo, parceladas, habitos, altos, marketplaces, compras };
 const PDFJS = new URL('../vendor/pdf.min.mjs', import.meta.url).href;
 const PDFJS_WORKER = new URL('../vendor/pdf.worker.min.mjs', import.meta.url).href;
 
@@ -203,6 +204,7 @@ function pedirSenhaFamilia({ criar }) {
       ? 'Ela protege os dados publicados. Use 4 palavras aleatórias (ex.: "tigre azul janela pipoca") e combine com sua esposa pessoalmente. Se for esquecida, os dados publicados não podem ser recuperados; basta subir as faturas de novo.'
       : 'A mesma senha usada para abrir o painel.';
     $('bloco-confirmar').hidden = !criar;
+    $('senha-regra').hidden = !criar;
     $('in-senha-familia').value = '';
     $('in-senha-confirmar').value = '';
     $('in-lembrar').checked = false;
